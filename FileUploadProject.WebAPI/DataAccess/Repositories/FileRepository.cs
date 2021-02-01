@@ -14,47 +14,31 @@ namespace FileUploadProject.WebAPI.DataAccess.Repositories
         {
             _context = fileContext;
         }
-
-        public IEnumerable<FileDescriptionShort> AddFileDescriptions(FileResult fileResult)
+        public IEnumerable<FileSummaryResult> SaveFiles(FileInpuDTO fileInpuDTO)
         {
-            List<string> filenames = new List<string>();
-            for (int i = 0; i < fileResult.FileNames.Count(); i++)
+            foreach (var item in fileInpuDTO.InputFiles)
             {
-                var fileDescription = new FileDescription
-                {
-                    ContentType = fileResult.ContentTypes[i],
-                    FileName = fileResult.FileNames[i],
-                    Name = fileResult.Names[i],
-                    CreatedTimestamp = fileResult.CreatedTimestamp,
-                    UpdatedTimestamp = fileResult.UpdatedTimestamp,
-                    Description = fileResult.Description
-                };
-
-                filenames.Add(fileResult.FileNames[i]);
-                _context.FileDescriptions.Add(fileDescription);
+                _context.FileDescriptions.Add(
+                    new FileDescription()
+                    {
+                        ContentType = item.ContentType,
+                        FileName = item.Name,
+                        Name = item.ExternalId,
+                        CreatedTimestamp = fileInpuDTO.CreatedTimeStamp,
+                        UpdatedTimestamp = fileInpuDTO.UpdatedTimeStamp,
+                        Description = item.Description
+                    });
             }
-
             _context.SaveChanges();
-            return GetNewFiles(filenames);
+            return GetNewSavedFiles(fileInpuDTO.InputFiles);
         }
 
-        private IEnumerable<FileDescriptionShort> GetNewFiles(List<string> filenames)
+        private IEnumerable<FileSummaryResult> GetNewSavedFiles(List<InputFileInfo> files)
         {
-            IEnumerable<FileDescription> x = _context.FileDescriptions.Where(r => filenames.Contains(r.FileName));
-            return x.Select(t => new FileDescriptionShort { Name = t.Name, Id = t.Id, Description = t.Description });
+            List<string> fileNames = files.Select(c => c.Name).ToList<string>();
+            IEnumerable<FileDescription> x = _context.FileDescriptions.Where(r => fileNames.Contains(r.FileName));
+            return x.Select(t => new FileSummaryResult { Name = t.Name, Id = t.Id, Description = t.Description });
         }
-
-        public IEnumerable<FileDescriptionShort> GetAllFiles()
-        {
-            return _context.FileDescriptions.Select(
-                    t => new FileDescriptionShort { Name = t.Name, Id = t.Id, Description = t.Description });
-        }
-
-        public FileDescription GetFileDescription(int id)
-        {
-            return _context.FileDescriptions.Single(t => t.Id == id);
-        }
-
 
         public void Dispose()
         {
@@ -63,6 +47,54 @@ namespace FileUploadProject.WebAPI.DataAccess.Repositories
                 _context.Dispose();
                 _context = null;
             }
+        }
+
+        public bool DeleteFile(int id)
+        {
+            var selectedFile = _context.FileDescriptions.Find(id);
+            if (selectedFile != null)
+            {
+                _context.FileDescriptions.Remove(selectedFile);
+                _context.SaveChanges();
+                return true;
+            }
+            else
+                return false;
+        }
+
+        public bool UpdateFile()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerable<FileSummaryResult> IFileRepository.GetAllFiles()
+        {
+            return _context.FileDescriptions.Select(
+                   t => new FileSummaryResult { Name = t.Name, Id = t.Id, Description = t.Description });
+        }
+
+        public FileAllSummary GetFile(int id)
+        {
+            var selectedFile = _context.FileDescriptions.SingleOrDefault(t => t.Id == id);
+            if (selectedFile != null)
+            {
+                return new FileAllSummary()
+                {
+                    ContentType = selectedFile.ContentType,
+                    CreatedDateTime = selectedFile.CreatedTimestamp,
+                    UpdatedDateTime = selectedFile.UpdatedTimestamp,
+                    Description = selectedFile.Description,
+                    FileName = selectedFile.FileName,
+                    ExternalId = selectedFile.Name
+                };
+            }
+            else
+                return new FileAllSummary();
+        }
+
+        public bool UpdateFile(FileInpuDTO fileInpuDTO)
+        {
+            throw new NotImplementedException();
         }
     }
 }

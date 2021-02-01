@@ -7,10 +7,10 @@ namespace FileUploadProject.WebAPI.DataAccess.Repositories
 
     public interface IFileRepository
     {
-        IEnumerable<FileDescriptionShort> AddFileDescriptions(FileResult fileResult);
-
-        IEnumerable<FileDescriptionShort> GetAllFiles();
-
-        FileDescription GetFileDescription(int id);
+        IEnumerable<FileSummaryResult> SaveFiles(FileInpuDTO fileInpuDTO); 
+        IEnumerable<FileSummaryResult> GetAllFiles();
+        FileAllSummary GetFile(int id);
+        bool DeleteFile(int id);
+        bool UpdateFile(FileInpuDTO fileInpuDTO);
     }
 }

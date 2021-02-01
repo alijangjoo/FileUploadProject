@@ -45,7 +45,8 @@ namespace FileUploadProject.WebAPI.Controllers
         /// </summary>
         public IActionResult ViewAllFiles()
         {
-            var model = new AllUploadedFiles { FileShortDescriptions = _fileRepository.GetAllFiles().ToList() };
+            // var model = new AllUploadedFiles { FileShortDescriptions = _fileRepository.GetAllFiles().ToList() };
+            var model = _fileRepository.GetAllFiles();
             return Ok(model);
         }
     }
